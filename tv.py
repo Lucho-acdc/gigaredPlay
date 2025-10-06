@@ -1,11 +1,14 @@
 ﻿"""Google Sheets helpers for the GigaredPlay workflow."""
 
+import base64
 import os
 import re
+import tempfile
 import time
 import unicodedata
 from collections import Counter
 from copy import deepcopy
+from pathlib import Path
 from threading import Lock
 from typing import Optional, Dict, Any, List
 
@@ -19,6 +22,30 @@ SHEET_CACHE_TTL = float(os.getenv("SHEET_CACHE_TTL_SECONDS", "45"))
 
 _sheet_cache_lock = Lock()
 _sheet_cache: Dict[str, tuple[float, Any]] = {}
+_service_account_path: Optional[str] = None
+
+
+def _resolve_service_account_file() -> str:
+    """Return the service account file path, writing from SERVICE_ACCOUNT_JSON if provided."""
+    global _service_account_path
+    if _service_account_path:
+        return _service_account_path
+
+    json_env = os.getenv('SERVICE_ACCOUNT_JSON', '').strip()
+    if json_env:
+        try:
+            decoded = base64.b64decode(json_env).decode('utf-8')
+        except Exception:
+            decoded = json_env
+        target = Path(tempfile.gettempdir()) / 'service-account.json'
+        target.write_text(decoded, encoding='utf-8')
+        _service_account_path = str(target)
+        return _service_account_path
+
+    _service_account_path = SERVICE_ACCOUNT_FILE
+    return _service_account_path
+
+
 
 
 def _cache_get(key: str):
@@ -74,7 +101,7 @@ def _name_signature(value: str) -> Counter:
 
 def _open_ws():
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=scopes)
+    creds = Credentials.from_service_account_file(_resolve_service_account_file(), scopes=scopes)
     client = gspread.authorize(creds)
     ss = client.open_by_key(SPREADSHEET_ID)
     return ss.get_worksheet(WORKSHEET_INDEX)
@@ -211,7 +238,7 @@ def obtener_usuario_cic_disponible() -> Optional[Dict[str, Any]]:
 
 def _open_ws_rw():
     scopes = ["https://www.googleapis.com/auth/spreadsheets"]
-    creds = Credentials.from_service_account_file(SERVICE_ACCOUNT_FILE, scopes=scopes)
+    creds = Credentials.from_service_account_file(_resolve_service_account_file(), scopes=scopes)
     client = gspread.authorize(creds)
     ss = client.open_by_key(SPREADSHEET_ID)
     return ss.get_worksheet(WORKSHEET_INDEX)
@@ -253,3 +280,4 @@ if __name__ == "__main__":
     print(f"Filas leidas: {len(rows)}")
     disp = obtener_usuario_cic_disponible()
     print("Primer disponible:", disp)
+

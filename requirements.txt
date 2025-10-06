@@ -7,3 +7,4 @@ gspread
 google-auth
 httpx
 itsdangerous
+python-multipart

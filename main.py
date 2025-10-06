@@ -1,7 +1,10 @@
 ﻿from pathlib import Path
+import asyncio
+import logging
 import os
 from typing import Dict, Optional
 
+import httpx
 from fastapi import Depends, FastAPI, Form, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -34,6 +37,13 @@ READ_USERNAME = os.getenv("READ_USERNAME", "consulta")
 READ_PASSWORD = os.getenv("READ_PASSWORD", "consulta123")
 WRITE_USERNAME = os.getenv("WRITE_USERNAME", "gestion")
 WRITE_PASSWORD = os.getenv("WRITE_PASSWORD", "gestion123")
+HEARTBEAT_URL = os.getenv("HEARTBEAT_URL")
+if not HEARTBEAT_URL:
+    render_url = os.getenv("RENDER_EXTERNAL_URL", "")
+    if render_url:
+        HEARTBEAT_URL = render_url.rstrip('/') + "/api/ping"
+HEARTBEAT_INTERVAL = float(os.getenv("HEARTBEAT_INTERVAL_SECONDS", "240"))
+_heartbeat_task: asyncio.Task | None = None
 
 app.add_middleware(
     SessionMiddleware,
@@ -73,6 +83,37 @@ def require_write(auth: Dict[str, str] = Depends(require_auth)) -> Dict[str, str
     if auth.get("role") != "write":
         raise HTTPException(status_code=403, detail="Sin permisos para crear usuarios")
     return auth
+
+
+async def _heartbeat_loop(url: str, interval: float) -> None:
+    if interval <= 0:
+        return
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        while True:
+            try:
+                await client.get(url)
+            except Exception as exc:
+                logger.debug("heartbeat failed: %s", exc)
+            await asyncio.sleep(interval)
+
+
+@app.on_event("startup")
+async def _on_startup():
+    global _heartbeat_task
+    if HEARTBEAT_URL and HEARTBEAT_INTERVAL > 0:
+        _heartbeat_task = asyncio.create_task(_heartbeat_loop(HEARTBEAT_URL, HEARTBEAT_INTERVAL))
+
+
+@app.on_event("shutdown")
+async def _on_shutdown():
+    global _heartbeat_task
+    if _heartbeat_task:
+        _heartbeat_task.cancel()
+        try:
+            await _heartbeat_task
+        except asyncio.CancelledError:
+            pass
+        _heartbeat_task = None
 
 
 # -----------------------------

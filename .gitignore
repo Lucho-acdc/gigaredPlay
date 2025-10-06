@@ -1,0 +1,36 @@
+﻿# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# Logs and coverage
+*.log
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# IDE / editor settings
+.vscode/
+.idea/
+*.swp
+
+# Local environment & secrets
+.env
+*.local
+usuariosgigaredplay-eb5981b62919.json
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,51 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Iniciar sesión · Clientes Phantom / GigaredPlay</title>
+<style>
+  :root {
+    --bg:#0d1117;
+    --panel:#161b22;
+    --border:#30363d;
+    --text:#c9d1d9;
+    --muted:#8b949e;
+    --accent:#58a6ff;
+    --danger:#f87171;
+    --radius:12px;
+  }
+  *,*::before,*::after{box-sizing:border-box;}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font:14px/1.6 "Segoe UI","Inter",system-ui,sans-serif;display:flex;align-items:center;justify-content:center;padding:32px;}
+  .login-card{width:100%;max-width:360px;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:0 12px 24px rgba(1,4,9,0.35);}
+  h1{margin:0 0 12px;font-size:22px;font-weight:600;}
+  p{margin:0 0 18px;color:var(--muted);font-size:13px;}
+  form{display:grid;gap:14px;}
+  label{display:flex;flex-direction:column;gap:6px;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:0.05em;text-transform:uppercase;}
+  input{padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;}
+  input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 1px rgba(88,166,255,0.35);}
+  button{padding:10px 16px;border-radius:8px;border:1px solid rgba(88,166,255,0.4);background:var(--bg);color:var(--accent);font-weight:600;cursor:pointer;transition:background 0.15s ease,border-color 0.15s ease;}
+  button:hover{background:rgba(88,166,255,0.08);}
+  .error{margin-bottom:12px;padding:10px 12px;border-radius:8px;background:rgba(184,65,65,0.18);border:1px solid rgba(184,65,65,0.35);color:var(--danger);font-size:13px;}
+  .hint{margin-top:16px;font-size:12px;color:var(--muted);}
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <h1>Iniciar sesión</h1>
+    <p>Ingresá con tu usuario para continuar.</p>
+    {% if error %}
+      <div class="error">{{ error }}</div>
+    {% endif %}
+    <form method="post" action="/login">
+      <label>Usuario
+        <input name="username" autofocus required />
+      </label>
+      <label>Contraseña
+        <input type="password" name="password" required />
+      </label>
+      <button type="submit">Ingresar</button>
+    </form>
+  </div>
+</body>
+</html>

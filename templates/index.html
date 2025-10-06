@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8" />
@@ -175,10 +175,10 @@
 </div>
 
 <script>
-  const CACHE_TTL = 120000;
+  const CACHE_TTL = 0;
   const resultCache = new Map();
-  const CAN_WRITE = {{ 'true' if role == 'write' else 'false' }};
-  const USER_ROLE = "{{ role }}";
+  const CAN_WRITE = {{ (role == 'write')|tojson }};
+  const USER_ROLE = '{{ role }}';
   const CURRENT_USER = "{{ username }}";
   window.CAN_WRITE = CAN_WRITE;
 

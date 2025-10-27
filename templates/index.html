@@ -93,10 +93,6 @@
   .panel{margin-top:16px;padding:14px;border-radius:var(--radius-md);border:1px dashed var(--card-border);background:var(--bg-alt);display:flex;flex-direction:column;gap:12px;}
   .actions{display:flex;gap:10px;flex-wrap:wrap;}
   .hidden{display:none !important;}
-  .ph-panel{margin-top:24px;}
-  .ph-panel .card{padding-bottom:20px;}
-  .ph-frame{margin-top:16px;border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--card-border);background:#fff;}
-  .ph-frame iframe{width:100%;height:70vh;border:0;background:#fff;color:#111;}
   .message-box{padding:12px 14px;border-radius:var(--radius-md);background:rgba(46,160,67,0.18);border:1px solid rgba(63,185,80,0.3);color:#c9d1d9;font-size:13px;white-space:pre-wrap;}
   .message-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
   .btn-secondary{border:1px solid var(--card-border);background:var(--bg);color:var(--muted);padding:8px 14px;border-radius:var(--radius-md);font-weight:500;cursor:pointer;transition:var(--transition);}
@@ -175,21 +171,6 @@
     </article>
   </section>
 
-  <section id="ph-panel" class="ph-panel hidden">
-    <article class="card">
-      <div class="card-header">
-        <div>
-          <p class="card-eyebrow">Phantom</p>
-          <h2 class="card-title">Buscar directo en PH</h2>
-        </div>
-        <button id="close-ph-btn" class="btn-secondary" type="button">Ocultar</button>
-      </div>
-      <div class="ph-frame">
-        <iframe id="ph-frame" title="Buscar directo en Phantom" src="about:blank"></iframe>
-      </div>
-      <div class="helper hidden" id="ph-helper-msg">Si la pagina no carga, verifica permisos de red o desbloquea contenido mixto.</div>
-    </article>
-  </section>
 </div>
 
 <script>
@@ -208,11 +189,7 @@
   const formArea = document.getElementById('form-area');
   const frameWrap = document.getElementById('alta-frame-wrap');
   const frameHelper = document.getElementById('alta-frame-helper');
-  const phPanel = document.getElementById('ph-panel');
-  const phFrame = document.getElementById('ph-frame');
-  const phHelperMsg = document.getElementById('ph-helper-msg');
   const phBtn = document.getElementById('open-ph-btn');
-  const phCloseBtn = document.getElementById('close-ph-btn');
   const PH_DIRECT_URL = 'http://201.222.43.248:5594/Phantom/login.php';
 
   if (form) {
@@ -220,26 +197,15 @@
   }
   if (phBtn) {
     phBtn.addEventListener('click', ()=>{
-      const isOpen = phPanel && !phPanel.classList.contains('hidden');
-      if (isOpen){
-        hidePhPanel();
+      const sep = PH_DIRECT_URL.includes('?') ? '&' : '?';
+      const targetUrl = `${PH_DIRECT_URL}${sep}t=${Date.now()}`;
+      const popup = window.open(targetUrl, '_blank');
+      if (popup) {
+        popup.opener = null;
       } else {
-        openPhPanel();
+        alert('No se pudo abrir Phantom. Revisa el bloqueador de pop-ups.');
       }
     });
-  }
-  if (phFrame) {
-    phFrame.addEventListener('load', ()=>{
-      try{
-        if (!phFrame.src || phFrame.src.endsWith('about:blank')) return;
-      }catch(_err){
-        // ignore cross-origin access issues
-      }
-      if (phHelperMsg) phHelperMsg.classList.add('hidden');
-    });
-  }
-  if (phCloseBtn) {
-    phCloseBtn.addEventListener('click', hidePhPanel);
   }
 
   function setStatus(text, tone = 'info'){
@@ -497,46 +463,6 @@ Contrasena: ${contrasena || '-'}`;
   }
 
   window.toggleExp = toggleExp;
-  function setPhButtonState(isOpen){
-    if (!phBtn) return;
-    if (isOpen){
-      phBtn.dataset.state = 'open';
-      phBtn.textContent = 'Cerrar PH';
-      phBtn.classList.add('danger');
-    } else {
-      phBtn.dataset.state = '';
-      phBtn.textContent = 'Buscar directo en PH';
-      phBtn.classList.remove('danger');
-    }
-  }
-
-  function openPhPanel(){
-    if (!phPanel) return;
-    phPanel.classList.remove('hidden');
-    if (phHelperMsg) phHelperMsg.classList.remove('hidden');
-    if (phFrame){
-      const sep = PH_DIRECT_URL.includes('?') ? '&' : '?';
-      if (!phFrame.dataset.loaded){
-        phFrame.src = `${PH_DIRECT_URL}${sep}t=${Date.now()}`;
-        phFrame.dataset.loaded = '1';
-      }
-    }
-    if (typeof phPanel.scrollIntoView === 'function'){
-      phPanel.scrollIntoView({behavior:'smooth', block:'start'});
-    }
-    setPhButtonState(true);
-  }
-
-  function hidePhPanel(){
-    if (!phPanel) return;
-    phPanel.classList.add('hidden');
-    if (phHelperMsg) phHelperMsg.classList.add('hidden');
-    setPhButtonState(false);
-  }
-
-  window.openPhPanel = openPhPanel;
-  window.hidePhPanel = hidePhPanel;
-
   function onRegistrarInline(btn){
     if (!CAN_WRITE) {
       alert('No tenes permisos para crear usuarios.');

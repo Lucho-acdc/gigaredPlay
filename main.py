@@ -1,6 +1,10 @@
 ﻿from pathlib import Path
 import asyncio
 import logging
+
+# Configure logger
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
 import os
 from typing import Dict, Optional
 

@@ -41,7 +41,7 @@
   .session-bar strong{color:var(--text);}
   .role-pill{display:inline-flex;align-items:center;margin-left:8px;padding:2px 8px;border-radius:999px;border:1px solid var(--card-border);background:var(--bg-alt);color:var(--text);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;}
   .logout-btn{padding:6px 12px;font-size:12px;}
-  .search-bar{margin-top:20px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:10px 12px;border-radius:var(--radius-lg);border:1px solid var(--card-border);background:var(--bg-alt);align-items:center;transition:var(--transition);}
+  .search-bar{margin-top:20px;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;padding:10px 12px;border-radius:var(--radius-lg);border:1px solid var(--card-border);background:var(--bg-alt);align-items:center;transition:var(--transition);}
   .search-bar:focus-within{border-color:var(--accent);box-shadow:0 0 0 1px rgba(88,166,255,0.35);}
   .input-wrap{position:relative;display:flex;align-items:center;}
   label{position:absolute;left:10px;top:-9px;padding:0 6px;border-radius:999px;background:var(--bg);color:var(--muted);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;font-weight:600;}
@@ -53,6 +53,7 @@
   .btn-primary:active{background:rgba(88,166,255,0.12);}
   .btn-primary:disabled{cursor:not-allowed;opacity:0.5;}
   .btn-primary .spinner{width:14px;height:14px;border-radius:50%;border:2px solid rgba(88,166,255,0.35);border-top-color:var(--accent);animation:spin 0.7s linear infinite;display:none;}
+  #open-ph-btn{white-space:nowrap;padding:10px 16px;}
   .search-bar.is-loading .btn-primary .spinner{display:inline-block;}
   .search-bar.is-loading .btn-primary .btn-text{opacity:0.0;}
   @keyframes spin{to{transform:rotate(360deg);}}
@@ -92,6 +93,10 @@
   .panel{margin-top:16px;padding:14px;border-radius:var(--radius-md);border:1px dashed var(--card-border);background:var(--bg-alt);display:flex;flex-direction:column;gap:12px;}
   .actions{display:flex;gap:10px;flex-wrap:wrap;}
   .hidden{display:none !important;}
+  .ph-panel{margin-top:24px;}
+  .ph-panel .card{padding-bottom:20px;}
+  .ph-frame{margin-top:16px;border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--card-border);background:#fff;}
+  .ph-frame iframe{width:100%;height:70vh;border:0;background:#fff;color:#111;}
   .message-box{padding:12px 14px;border-radius:var(--radius-md);background:rgba(46,160,67,0.18);border:1px solid rgba(63,185,80,0.3);color:#c9d1d9;font-size:13px;white-space:pre-wrap;}
   .message-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;}
   .btn-secondary{border:1px solid var(--card-border);background:var(--bg);color:var(--muted);padding:8px 14px;border-radius:var(--radius-md);font-weight:500;cursor:pointer;transition:var(--transition);}
@@ -109,9 +114,6 @@
   .form-area.hidden{display:none;}
   .card--form .card-header{margin-bottom:12px;}
   .form-body{padding-top:0;}
-  .form-frame{margin-top:14px;border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow);}
-  .form-frame.hidden{display:none;}
-  .form-frame iframe{width:100%;height:60vh;border:0;background:var(--bg);}
   @media(max-width:720px){
     .hero{padding:20px;}
     h1{font-size:20px;}
@@ -119,6 +121,7 @@
     .session-bar{flex-direction:column;gap:8px;align-items:flex-start;}
     .logout-btn{width:100%;}
     .search-bar{grid-template-columns:1fr;}
+    #open-ph-btn{width:100%;justify-content:center;}
     .btn-primary{width:100%;justify-content:center;}
     .data-row{grid-template-columns:minmax(0,05fr);}
     .data-label{font-size:10px;}
@@ -139,6 +142,7 @@
         <span class="btn-text">Buscar</span>
         <span class="spinner" aria-hidden="true"></span>
       </button>
+      <button id="open-ph-btn" class="btn-secondary" type="button">Buscar directo en PH</button>
     </form>
     <div id="status" data-tone="info">Listo para buscar</div>
     <div class="session-bar">
@@ -165,11 +169,25 @@
         <span class="badge">Registrar</span>
       </div>
       <div class="form-body">
-        <div class="helper hidden" id="alta-frame-helper">Configura ALTA_URL en .env para habilitar el alta embebido.</div>
-        <div class="form-frame hidden" id="alta-frame-wrap">
-          <iframe id="alta-frame" title="Registrar usuario" src="about:blank"></iframe>
-        </div>
+        <div class="helper hidden" id="alta-frame-helper">Configura ALTA_URL en .env para habilitar el alta.</div>
+        <div class="helper hidden" id="alta-frame-wrap">El formulario de alta se abre en una pestana nueva. Si no se abrio, revisa el bloqueador de pop-ups.</div>
       </div>
+    </article>
+  </section>
+
+  <section id="ph-panel" class="ph-panel hidden">
+    <article class="card">
+      <div class="card-header">
+        <div>
+          <p class="card-eyebrow">Phantom</p>
+          <h2 class="card-title">Buscar directo en PH</h2>
+        </div>
+        <button id="close-ph-btn" class="btn-secondary" type="button">Ocultar</button>
+      </div>
+      <div class="ph-frame">
+        <iframe id="ph-frame" title="Buscar directo en Phantom" src="about:blank"></iframe>
+      </div>
+      <div class="helper hidden" id="ph-helper-msg">Si la pagina no carga, verifica permisos de red o desbloquea contenido mixto.</div>
     </article>
   </section>
 </div>
@@ -177,7 +195,7 @@
 <script>
   const CACHE_TTL = 0;
   const resultCache = new Map();
-  const CAN_WRITE = {{ (role == 'write')|tojson }};
+  const CAN_WRITE = JSON.parse('{{ (role == "write")|tojson }}');
   const USER_ROLE = '{{ role }}';
   const CURRENT_USER = "{{ username }}";
   window.CAN_WRITE = CAN_WRITE;
@@ -190,10 +208,38 @@
   const formArea = document.getElementById('form-area');
   const frameWrap = document.getElementById('alta-frame-wrap');
   const frameHelper = document.getElementById('alta-frame-helper');
-  const frame = document.getElementById('alta-frame');
+  const phPanel = document.getElementById('ph-panel');
+  const phFrame = document.getElementById('ph-frame');
+  const phHelperMsg = document.getElementById('ph-helper-msg');
+  const phBtn = document.getElementById('open-ph-btn');
+  const phCloseBtn = document.getElementById('close-ph-btn');
+  const PH_DIRECT_URL = 'http://201.222.43.248:5594/Phantom/login.php';
 
   if (form) {
     form.addEventListener('submit', buscar);
+  }
+  if (phBtn) {
+    phBtn.addEventListener('click', ()=>{
+      const isOpen = phPanel && !phPanel.classList.contains('hidden');
+      if (isOpen){
+        hidePhPanel();
+      } else {
+        openPhPanel();
+      }
+    });
+  }
+  if (phFrame) {
+    phFrame.addEventListener('load', ()=>{
+      try{
+        if (!phFrame.src || phFrame.src.endsWith('about:blank')) return;
+      }catch(_err){
+        // ignore cross-origin access issues
+      }
+      if (phHelperMsg) phHelperMsg.classList.add('hidden');
+    });
+  }
+  if (phCloseBtn) {
+    phCloseBtn.addEventListener('click', hidePhPanel);
   }
 
   function setStatus(text, tone = 'info'){
@@ -234,7 +280,6 @@
     out.innerHTML = `<div class="placeholder"><strong>${esc(message)}</strong><span>Proba con otro ID o revisa si escribiste correctamente.</span></div>`;
     if (formArea) formArea.classList.add('hidden');
     if (frameWrap) frameWrap.classList.add('hidden');
-    if (frame) frame.src = 'about:blank';
     if (frameHelper) frameHelper.classList.add('hidden');
   }
 
@@ -243,7 +288,6 @@
     out.innerHTML = `<div class="skeleton"><div class="skeleton-card"></div><div class="skeleton-card"></div></div>`;
     if (formArea) formArea.classList.add('hidden');
     if (frameWrap) frameWrap.classList.add('hidden');
-    if (frame) frame.src = 'about:blank';
     if (frameHelper) frameHelper.classList.add('hidden');
   }
 
@@ -394,7 +438,6 @@ Contrasena: ${contrasena || '-'}`;
     }
     if (frameWrap) frameWrap.classList.add('hidden');
     if (frameHelper) frameHelper.classList.add('hidden');
-    if (frame) frame.src = 'about:blank';
   }
 
   async function buscar(event){
@@ -454,6 +497,45 @@ Contrasena: ${contrasena || '-'}`;
   }
 
   window.toggleExp = toggleExp;
+  function setPhButtonState(isOpen){
+    if (!phBtn) return;
+    if (isOpen){
+      phBtn.dataset.state = 'open';
+      phBtn.textContent = 'Cerrar PH';
+      phBtn.classList.add('danger');
+    } else {
+      phBtn.dataset.state = '';
+      phBtn.textContent = 'Buscar directo en PH';
+      phBtn.classList.remove('danger');
+    }
+  }
+
+  function openPhPanel(){
+    if (!phPanel) return;
+    phPanel.classList.remove('hidden');
+    if (phHelperMsg) phHelperMsg.classList.remove('hidden');
+    if (phFrame){
+      const sep = PH_DIRECT_URL.includes('?') ? '&' : '?';
+      if (!phFrame.dataset.loaded){
+        phFrame.src = `${PH_DIRECT_URL}${sep}t=${Date.now()}`;
+        phFrame.dataset.loaded = '1';
+      }
+    }
+    if (typeof phPanel.scrollIntoView === 'function'){
+      phPanel.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+    setPhButtonState(true);
+  }
+
+  function hidePhPanel(){
+    if (!phPanel) return;
+    phPanel.classList.add('hidden');
+    if (phHelperMsg) phHelperMsg.classList.add('hidden');
+    setPhButtonState(false);
+  }
+
+  window.openPhPanel = openPhPanel;
+  window.hidePhPanel = hidePhPanel;
 
   function onRegistrarInline(btn){
     if (!CAN_WRITE) {
@@ -470,13 +552,14 @@ Contrasena: ${contrasena || '-'}`;
       if (formArea) formArea.classList.remove('hidden');
       if (altaUrl){
         if (frameWrap) frameWrap.classList.remove('hidden');
-        if (frame){
-          const sep = altaUrl.includes('?') ? '&' : '?';
-          frame.src = `${altaUrl}${sep}t=${Date.now()}`;
-        }
         if (frameHelper) frameHelper.classList.add('hidden');
-      } else if (frameHelper){
-        frameHelper.classList.remove('hidden');
+        const sep = altaUrl.includes('?') ? '&' : '?';
+        const targetUrl = `${altaUrl}${sep}t=${Date.now()}`;
+        const popup = window.open(targetUrl, '_blank');
+        if (popup) popup.opener = null;
+      } else {
+        if (frameWrap) frameWrap.classList.add('hidden');
+        if (frameHelper) frameHelper.classList.remove('hidden');
       }
       btn.dataset.state = 'open';
       btn.textContent = 'Cancelar';
@@ -486,7 +569,6 @@ Contrasena: ${contrasena || '-'}`;
     } else {
       if (formArea) formArea.classList.add('hidden');
       if (frameWrap) frameWrap.classList.add('hidden');
-      if (frame) frame.src = 'about:blank';
       if (frameHelper) frameHelper.classList.add('hidden');
       btn.dataset.state = '';
       btn.textContent = 'Registrar';
@@ -546,7 +628,6 @@ Contrasena: ${contrasena || '-'}`;
     }
     if (btnFin) btnFin.style.display = 'none';
     if (frameWrap) frameWrap.classList.add('hidden');
-    if (frame) frame.src = 'about:blank';
     if (frameHelper) frameHelper.classList.add('hidden');
     if (formArea) formArea.classList.add('hidden');
 

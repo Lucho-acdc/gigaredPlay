@@ -220,11 +220,7 @@
         `top=${Math.round(top)}`
       ].join(',');
       const popup = window.open(targetUrl, '_blank', features);
-      if (popup) {
-        popup.opener = null;
-      } else {
-        alert('No se pudo abrir Phantom. Revisa el bloqueador de pop-ups.');
-      }
+      if (popup) popup.opener = null;
     });
   }
 
